@@ -1,0 +1,22 @@
+{
+    "files.associations": {
+        "queue": "cpp",
+        "iostream": "cpp",
+        "random": "cpp",
+        "complex": "cpp",
+        "ostream": "cpp",
+        "stack": "cpp",
+        "vector": "cpp",
+        "iosfwd": "cpp",
+        "__config": "cpp",
+        "string": "cpp",
+        "__tuple": "cpp",
+        "chrono": "cpp",
+        "ios": "cpp",
+        "string_view": "cpp",
+        "typeindex": "cpp",
+        "variant": "cpp",
+        "forward_list": "cpp",
+        "list": "cpp"
+    }
+}

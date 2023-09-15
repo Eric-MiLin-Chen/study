@@ -1,0 +1,16 @@
+{
+    "configurations": [
+        {
+            "compilerPath": "/usr/bin/clang++",
+            "cppStandard": "c++20",
+            "includePath": [
+                "${{workspaceFolder}}/**",
+                "${workspaceFolder}/Lib",
+                "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/Kernel.framework/Versions/A/Headers/mach"
+            ],
+            "intelliSenseMode": "macos-clang-arm64",
+            "name": "Mac"
+        }
+    ],
+    "version": 4
+}
