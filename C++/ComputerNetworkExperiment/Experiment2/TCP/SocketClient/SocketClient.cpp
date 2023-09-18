@@ -2,7 +2,7 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <arpa/inet.h> //包含struct sockaddr_in
-#include <string>	   //包含memset()
+#include <string.h>	   //包含memset()
 
 #define SERV_IP "127.0.0.1"
 #define SERV_PORT 8888
