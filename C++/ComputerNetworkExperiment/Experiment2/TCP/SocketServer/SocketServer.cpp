@@ -22,7 +22,7 @@ int LoadFile(std::string usernamedir, std::string passwddir, std::unordered_map<
     if (!usernamefile && !passwdfile)
     {
         std::cerr << "无法打开输入文件" << std::endl;
-        return 0;
+        return -1;
     }
     else
     {
@@ -171,7 +171,8 @@ int main()
     std::string usernamedir = "./username.txt", passwddir = "./passwd.txt";
     std::vector<std::thread> threads;
 
-    LoadFile(usernamedir, passwddir, userdata);
+    if (LoadFile(usernamedir, passwddir, userdata) == -1)
+        return -1;
 
     printf("TCP Server started.\n");
     while (true)
