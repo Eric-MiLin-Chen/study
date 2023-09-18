@@ -1,49 +1,66 @@
 #include <iostream>
-#include <cstring>
+#include <string>
+#include <sys/socket.h>
 #include <unistd.h>
 #include <arpa/inet.h>
 
+#define SERV_IP "127.0.0.1"
+#define SERV_PORT 8888
+const int BUF_SIZE = 1024;
+
+int ClieConnect(sockaddr_in &serv_addr, int &clie_fd)
+{
+    // 创建Socket
+    clie_fd = socket(AF_INET, SOCK_DGRAM, 0);
+    if (clie_fd == -1)
+    {
+        std::cerr << "Error: Could not create socket." << std::endl;
+        return -1;
+    }
+
+    // 配置服务器地址
+    memset(&serv_addr, 0, sizeof(serv_addr));
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_port = htons(SERV_PORT);          // 服务器的端口号
+    serv_addr.sin_addr.s_addr = inet_addr(SERV_IP); // 服务器的IP地址
+    return 1;
+}
+
+int ClieLogin(const int clie_fd, char buf[], int buflen, const int login_counter = 0)
+{
+    return 1;
+}
+
+void Service(sockaddr_in &serv_addr, int &clie_fd, char buf[], int buflen)
+{
+    socklen_t serverAddrLen = sizeof(serv_addr);
+    while (true)
+    {
+        fgets(buf, buflen, stdin); // 参数1：目的缓冲区指针，参数2：缓冲区大小，参数3：源数据流；stdin：标准输入
+        sendto(clie_fd, buf, strlen(buf), 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
+        int n = recvfrom(clie_fd, buf, buflen, 0, (struct sockaddr *)&serv_addr, &serverAddrLen); // 写完之后发给服务端了，服务端会响应回来，现在该读了
+        if (buf[0] != '\n' && n == 1)
+        {
+            printf("Log Out!\n");
+            return;
+        }
+        write(STDOUT_FILENO, buf, n); // 把读到的服务器的响应写到屏幕
+    }
+    return;
+}
+
 int main()
 {
-    // 创建UDP套接字
-    int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
-    if (sockfd == -1)
-    {
-        std::cerr << "Error creating socket" << std::endl;
-        return 1;
-    }
+    int serv_fd, clie_fd;
+    char buf[1024];
+    sockaddr_in serv_addr;
 
-    // 设置服务器地址和端口
-    struct sockaddr_in serverAddr;
-    memset(&serverAddr, 0, sizeof(serverAddr));
-    serverAddr.sin_family = AF_INET;
-    serverAddr.sin_port = htons(12345); // 服务器端口号
-    serverAddr.sin_addr.s_addr = inet_addr("服务器IP地址");
+    ClieConnect(serv_addr, clie_fd);
+    ClieLogin(clie_fd, buf, BUF_SIZE);
+    Service(serv_addr, clie_fd, buf, BUF_SIZE);
 
-    // 发送消息到服务器
-    const char *message = "Hello, UDP Server!";
-    ssize_t bytesSent = sendto(sockfd, message, strlen(message), 0, (struct sockaddr *)&serverAddr, sizeof(serverAddr));
-    if (bytesSent == -1)
-    {
-        std::cerr << "Error sending data" << std::endl;
-        close(sockfd);
-        return 1;
-    }
-
-    // 接收服务器的响应
-    char buffer[1024];
-    ssize_t bytesReceived = recvfrom(sockfd, buffer, sizeof(buffer), 0, nullptr, nullptr);
-    if (bytesReceived == -1)
-    {
-        std::cerr << "Error receiving data" << std::endl;
-        close(sockfd);
-        return 1;
-    }
-
-    buffer[bytesReceived] = '\0';
-    std::cout << "Received response from server: " << buffer << std::endl;
-
-    close(sockfd);
+    // 关闭Socket
+    close(clie_fd);
 
     return 0;
 }
