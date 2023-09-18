@@ -3,5 +3,5 @@
 .DS_Store
 *.out
 *.exe
-test
-Test
+test/
+Test/
