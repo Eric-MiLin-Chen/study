@@ -5,3 +5,4 @@
 *.exe
 test/
 Test/
+.vscode
