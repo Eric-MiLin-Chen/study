@@ -7,7 +7,6 @@
 #define SERV_IP "127.0.0.1"
 #define SERV_PORT 8888
 const int RECONNECT_EXIT = 4;
-const int LOGIN_EXIT = 4;
 const int BUF_SIZE = 1024;
 
 int ClieConnect(int &clie_fd, const int reconnect_counter = 0)
@@ -40,11 +39,6 @@ int ClieConnect(int &clie_fd, const int reconnect_counter = 0)
 
 int ClieLogin(const int clie_fd, char buf[], int buflen, const int login_counter = 0)
 {
-	if (login_counter == LOGIN_EXIT)
-	{
-		printf("LOGIN Failed!\nExiting\n");
-		return 0;
-	}
 	printf("Username: ");
 	fgets(buf, buflen, stdin);			// 参数1：目的缓冲区指针，参数2：缓冲区大小，参数3：源数据流；stdin：标准输入
 	send(clie_fd, buf, strlen(buf), 0); // 键盘输入hello/n，fgets后buf里的是hello/n/0,strlen(buf)取的是/0之前的长度
@@ -60,9 +54,14 @@ int ClieLogin(const int clie_fd, char buf[], int buflen, const int login_counter
 		printf("Login Successfully!\n");
 		return 1;
 	}
+	else if (strcmp(buf, "F") == 0)
+	{
+		printf("LOGIN Failed!\nExiting\n");
+		return -1;
+	}
 	else
 	{
-		printf("Username or password is incorrect!\nTry to relogin again(%d/%d)\n", login_counter + 1, LOGIN_EXIT);
+		printf("Username or password is incorrect!\nTry to relogin again(%d/%d)\n", login_counter + 1, buf[0] - '0');
 		return ClieLogin(clie_fd, buf, buflen, login_counter + 1);
 	}
 }

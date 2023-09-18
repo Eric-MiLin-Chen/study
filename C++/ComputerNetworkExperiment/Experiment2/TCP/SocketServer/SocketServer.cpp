@@ -12,6 +12,7 @@
 #define SERV_PORT 8888
 const int NameAndPasswdSize = 20;
 const int BUF_SIZE = 1024;
+const int LOGIN_EXIT = 4;
 std::unordered_map<std::string, std::string> userdata;
 
 // 从文件加载用户名和密码到unordered_map
@@ -90,14 +91,14 @@ int ServConnect(int &serv_fd, int &clie_fd)
 }
 
 // 服务器登录功能，验证用户名和密码
-int ServLogin(const int serv_fd, const int clie_fd, char buf[], int buflen, std::unordered_map<std::string, std::string> &userdata)
+int ServLogin(const int serv_fd, const int clie_fd, char buf[], int buflen, std::unordered_map<std::string, std::string> &userdata, const int login_counter = 0)
 {
     int username_flag = recv(clie_fd, buf, buflen, 0); // 从客户端套接字读取数据
     for (int i = 0; i <= username_flag; i++)
         if (buf[i] == '\n')
             buf[i] = '\0';
     std::string username = buf;
-    username_flag = (userdata.count(username) > 0) && (username_flag <= NameAndPasswdSize);
+    username_flag = (userdata.count(username) > 0) && (username_flag <= NameAndPasswdSize) && (username != "");
     printf("Username: %s\n", buf);
 
     int password_flag = recv(clie_fd, buf, buflen, 0); // 从客户端套接字读取数据
@@ -105,7 +106,7 @@ int ServLogin(const int serv_fd, const int clie_fd, char buf[], int buflen, std:
         if (buf[i] == '\n')
             buf[i] = '\0';
     std::string password = buf;
-    password_flag = (password == userdata[username]) && (password_flag <= NameAndPasswdSize);
+    password_flag = (password == userdata[username]) && (password_flag <= NameAndPasswdSize) && (password != "");
     printf("Password: %s\n", buf);
 
     if (username_flag && password_flag)
@@ -114,13 +115,21 @@ int ServLogin(const int serv_fd, const int clie_fd, char buf[], int buflen, std:
         send(clie_fd, "T", 2, 0);
         return 1;
     }
+    else if (login_counter + 1 == LOGIN_EXIT)
+    {
+        send(clie_fd, "F", 2, 0);
+        printf("LOGIN Failed!\nExiting\n\n");
+        return -1;
+    }
     else
     {
         printf("Judgment: False\nRelogining...\n\n");
-        send(clie_fd, "F", 2, 0);
-        return ServLogin(serv_fd, clie_fd, buf, buflen, userdata);
+        buf[0] = '0' + LOGIN_EXIT;
+        buf[1] = '\0';
+        send(clie_fd, buf, 2, 0);
+        return ServLogin(serv_fd, clie_fd, buf, buflen, userdata, login_counter + 1);
     }
-    return 0;
+    return -1;
 }
 
 // 提供服务，将客户端发来的消息转换为大写字母并返回
