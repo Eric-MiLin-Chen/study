@@ -1,0 +1,7 @@
+*.out.dSYM/
+*.vscode/
+*.out
+.DS_Store
+test/
+Week3/Data/
+Week4/Data/
