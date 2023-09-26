@@ -8,7 +8,7 @@
 
 int main()
 {
-    int i, r, j, k, l, p1, p2, fd[2];
+    int read_nums, pid, ppid, p1, p2, fd[2];
     char buf[50], s[50];
     int res = pipe(fd);         /*建立一个管道fd*/
     while ((p1 = fork()) == -1) /*创建子进程1*/
@@ -21,9 +21,9 @@ int main()
         res = write(fd[1], buf, 50); /*信息写入管道*/
         res = lockf(fd[1], 0, 0);    /*管道写入端解锁*/
         sleep(5);
-        j = getpid();
-        k = getppid();
-        printf("P1 %d is weakup. My parent process ID is %d.\n", j, k);
+        pid = getpid();
+        ppid = getppid();
+        printf("P1 %d is wakeup. My parent process ID is %d.\n", pid, ppid);
         exit(0);
     }
     else
@@ -38,24 +38,24 @@ int main()
             res = write(fd[1], buf, 50); /*信息写入管道*/
             res = lockf(fd[1], 0, 0);    /*管道写入端解锁*/
             sleep(5);
-            j = getpid();
-            k = getppid();
-            printf("P2 %d is weakup. My parent process ID is %d.\n", j, k);
+            pid = getpid();
+            ppid = getppid();
+            printf("P2 %d is wakeup. My parent process ID is %d.\n", pid, ppid);
             exit(0);
         }
         else
         {
-            l = getpid();
+            pid = getpid();
             wait(0); /* 等待被唤醒*/
-            if (r = read(fd[0], s, 50) == -1)
+            if (read_nums = read(fd[0], s, 50) == -1)
                 printf("Can't read pipe. \n");
             else
-                printf("Parent %d: %s \n", l, s);
+                printf("Parent %d: %s \n", pid, s);
             wait(0); /* 等待被唤醒*/
-            if (r = read(fd[0], s, 50) == -1)
+            if (read_nums = read(fd[0], s, 50) == -1)
                 printf("Can't read pipe. \n");
             else
-                printf("Parent %d: %s \n", l, s);
+                printf("Parent %d: %s \n", pid, s);
             exit(0);
         }
     }
