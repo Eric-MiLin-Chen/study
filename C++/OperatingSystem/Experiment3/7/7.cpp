@@ -24,12 +24,14 @@ int main()
     if (child_pid == 0)
     { // 子进程
         // 向管道写入数据
+        printf("Parent %d: %d \n", getppid(), getpid());
         const char *message = "Hello from child process!\n";
         res = lockf(pipe_fd[1], 1, 0);
         res = write(pipe_fd[1], message, strlen(message));
         res = lockf(pipe_fd[1], 0, 0);
-
+        sleep(1);
         std::cout << "Child process exiting." << std::endl;
+        printf("Parent %d: %d \n", getppid(), getpid());
     }
     else
     { // 父进程
