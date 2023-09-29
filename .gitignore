@@ -1,6 +1,6 @@
 高年级研讨课
 *.out.dSYM
-.DS_Store
+**/.DS_Store
 *.out
 *.exe
 test/
