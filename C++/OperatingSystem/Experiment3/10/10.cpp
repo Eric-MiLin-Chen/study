@@ -12,17 +12,17 @@ template <typename T>
 class CircularQueue
 {
 private:
-    int capacity; // 队列容量
-    int front;    // 队首索引
-    int rear;     // 队尾索引
-    T *elements;  // 存储元素的数组
+    int _capacity; // 队列容量
+    int _front;    // 队首索引
+    int _rear;     // 队尾索引
+    T *elements;   // 存储元素的数组
 
 public:
     CircularQueue(int capacity)
     {
-        this->capacity = capacity;
+        this->_capacity = capacity;
         elements = new T[capacity];
-        front = rear = -1;
+        _front = _rear = -1;
     }
 
     ~CircularQueue()
@@ -32,29 +32,23 @@ public:
 
     bool isEmpty()
     {
-        return front == -1;
+        return _front == -1;
     }
 
     bool isFull()
     {
-        return (front == 0 && rear == capacity - 1) || (rear == (front - 1) % (capacity - 1));
+        return (_front == 0 && _rear == _capacity - 1) || (_rear == (_front - 1) % (_capacity - 1));
     }
 
     int size()
     {
         if (isEmpty())
-        {
             return 0;
-        }
         if (isFull())
-        {
-            return capacity;
-        }
-        if (front <= rear)
-        {
-            return rear - front + 1;
-        }
-        return capacity - front + rear + 1;
+            return _capacity;
+        if (_front <= _rear)
+            return _rear - _front + 1;
+        return _capacity - _front + _rear + 1;
     }
 
     void push(T item)
@@ -66,19 +60,13 @@ public:
         }
 
         if (isEmpty())
-        {
-            front = rear = 0;
-        }
-        else if (rear == capacity - 1)
-        {
-            rear = 0;
-        }
+            _front = _rear = 0;
+        else if (_rear == _capacity - 1)
+            _rear = 0;
         else
-        {
-            rear++;
-        }
+            _rear++;
 
-        elements[rear] = item;
+        elements[_rear] = item;
     }
 
     void pop()
@@ -89,28 +77,22 @@ public:
             return;
         }
 
-        if (front == rear)
-        {
-            front = rear = -1;
-        }
-        else if (front == capacity - 1)
-        {
-            front = 0;
-        }
+        if (_front == _rear)
+            _front = _rear = -1;
+        else if (_front == _capacity - 1)
+            _front = 0;
         else
-        {
-            front++;
-        }
+            _front++;
     }
 
-    T frontElement()
+    T front()
     {
         if (isEmpty())
         {
             cout << "队列为空，无法获取队首元素" << endl;
             throw "队列为空";
         }
-        return elements[front];
+        return elements[_front];
     }
 };
 
@@ -150,7 +132,7 @@ void consumer(int id)
         sem_wait(&filledSlots);
 
         // 从缓冲区中取出一个项目并消费
-        int item = buffer.frontElement();
+        int item = buffer.front();
         buffer.pop();
 
         {
