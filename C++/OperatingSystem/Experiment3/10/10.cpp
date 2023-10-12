@@ -1,103 +1,200 @@
 #include <iostream>
-#include <queue>
-#include <mutex>
-#include <condition_variable>
+#include <vector>
 #include <thread>
+#include <semaphore.h>
+#include <mutex>
+#include <chrono>
 
 using namespace std;
 
-const int BUFFER_SIZE = 5;  // 缓冲区大小
-const int NUM_PRODUCE = 10; // 生产者生成的数据项数量
-
-queue<int> buffer;                            // 缓冲区
-mutex mtx;                                    // 互斥锁
-condition_variable buffer_empty, buffer_full; // 信号量
-
-// 生产者函数
-void producer(int id)
+// 循环队列的定义
+template <typename T>
+class CircularQueue
 {
-    for (int i = 0; i < NUM_PRODUCE; ++i)
+private:
+    int capacity; // 队列容量
+    int front;    // 队首索引
+    int rear;     // 队尾索引
+    T *elements;  // 存储元素的数组
+
+public:
+    CircularQueue(int capacity)
     {
-        // 生产数据项
-        int item = i + 1;
+        this->capacity = capacity;
+        elements = new T[capacity];
+        front = rear = -1;
+    }
 
-        unique_lock<mutex> lock(mtx);
+    ~CircularQueue()
+    {
+        delete[] elements;
+    }
 
-        // 如果缓冲区已满，等待
-        while (buffer.size() >= BUFFER_SIZE)
+    bool isEmpty()
+    {
+        return front == -1;
+    }
+
+    bool isFull()
+    {
+        return (front == 0 && rear == capacity - 1) || (rear == (front - 1) % (capacity - 1));
+    }
+
+    int size()
+    {
+        if (isEmpty())
         {
-            cout << "Producer " << id << " is waiting. Buffer full." << endl;
-            buffer_full.wait(lock);
+            return 0;
+        }
+        if (isFull())
+        {
+            return capacity;
+        }
+        if (front <= rear)
+        {
+            return rear - front + 1;
+        }
+        return capacity - front + rear + 1;
+    }
+
+    void push(T item)
+    {
+        if (isFull())
+        {
+            cout << "队列已满，无法添加元素" << endl;
+            return;
         }
 
-        // 将数据项放入缓冲区
-        buffer.push(item);
-        cout << "Producer " << id << " produced item " << item << ". Buffer size: " << buffer.size() << endl;
+        if (isEmpty())
+        {
+            front = rear = 0;
+        }
+        else if (rear == capacity - 1)
+        {
+            rear = 0;
+        }
+        else
+        {
+            rear++;
+        }
 
-        // 通知消费者可以取数据
-        buffer_empty.notify_all();
+        elements[rear] = item;
+    }
 
-        lock.unlock();
+    void pop()
+    {
+        if (isEmpty())
+        {
+            cout << "队列为空，无法出队" << endl;
+            return;
+        }
 
-        // 模拟生产耗时
-        this_thread::sleep_for(chrono::milliseconds(100));
+        if (front == rear)
+        {
+            front = rear = -1;
+        }
+        else if (front == capacity - 1)
+        {
+            front = 0;
+        }
+        else
+        {
+            front++;
+        }
+    }
+
+    T frontElement()
+    {
+        if (isEmpty())
+        {
+            cout << "队列为空，无法获取队首元素" << endl;
+            throw "队列为空";
+        }
+        return elements[front];
+    }
+};
+
+const int bufferSize = 5; // 缓冲区大小
+CircularQueue<int> buffer(bufferSize);
+sem_t emptySlots, filledSlots; // 信号量用于表示空槽位和已填槽位
+std::mutex mtx;                // 互斥锁用于控制输出顺序
+
+const int numProducers = 2;
+const int numConsumers = 2;
+
+void producer(int id)
+{
+    for (int i = 1; i <= 10; ++i)
+    {
+        sem_wait(&emptySlots);
+
+        // 生产一个项目并将其放入缓冲区
+        buffer.push(i);
+
+        {
+            std::lock_guard<std::mutex> lock(mtx);
+            std::cout << "生产者 " << id << " 生产: " << i << ", 当前缓冲容量: " << buffer.size() << std::endl;
+        }
+
+        sem_post(&filledSlots);
+
+        // 引入延时，模拟生产过程
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 }
 
-// 消费者函数
 void consumer(int id)
 {
-    for (int i = 0; i < NUM_PRODUCE; ++i)
+    for (int i = 1; i <= 10; ++i)
     {
-        unique_lock<mutex> lock(mtx);
+        sem_wait(&filledSlots);
 
-        // 如果缓冲区为空，等待
-        while (buffer.empty())
+        // 从缓冲区中取出一个项目并消费
+        int item = buffer.frontElement();
+        buffer.pop();
+
         {
-            cout << "Consumer " << id << " is waiting. Buffer empty." << endl;
-            buffer_empty.wait(lock);
+            std::lock_guard<std::mutex> lock(mtx);
+            std::cout << "消费者 " << id << " 消费: " << item << ", 当前缓冲容量: " << buffer.size() << std::endl;
         }
 
-        // 从缓冲区取出数据
-        int item = buffer.front();
-        buffer.pop();
-        cout << "Consumer " << id << " consumed item " << item << ". Buffer size: " << buffer.size() << endl;
+        sem_post(&emptySlots);
 
-        // 通知生产者可以放数据
-        buffer_full.notify_all();
-
-        lock.unlock();
-
-        // 模拟消费耗时
-        this_thread::sleep_for(chrono::milliseconds(200));
+        // 引入延时，模拟消费过程
+        std::this_thread::sleep_for(std::chrono::milliseconds(150));
     }
 }
 
 int main()
 {
-    vector<thread> producers, consumers;
+    sem_init(&emptySlots, 0, bufferSize); // 初始化信号量
+    sem_init(&filledSlots, 0, 0);
 
-    // 创建生产者线程
-    for (int i = 1; i <= 2; ++i)
-    {
-        producers.emplace_back(producer, i);
-    }
+    std::vector<std::thread> producerThreads;
+    std::vector<std::thread> consumerThreads;
 
-    // 创建消费者线程
-    for (int i = 1; i <= 3; ++i)
+    for (int i = 0; i < numProducers; ++i)
     {
-        consumers.emplace_back(consumer, i);
+        producerThreads.emplace_back(producer, i);
     }
 
-    // 等待线程结束
-    for (auto &producer_thread : producers)
+    for (int i = 0; i < numConsumers; ++i)
     {
-        producer_thread.join();
+        consumerThreads.emplace_back(consumer, i);
     }
-    for (auto &consumer_thread : consumers)
+
+    for (auto &thread : producerThreads)
     {
-        consumer_thread.join();
+        thread.join();
     }
+
+    for (auto &thread : consumerThreads)
+    {
+        thread.join();
+    }
+
+    sem_destroy(&emptySlots);
+    sem_destroy(&filledSlots);
 
     return 0;
 }
