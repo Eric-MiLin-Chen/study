@@ -1,0 +1,48 @@
+{
+  "options": {},
+  "tasks": [
+    {
+      "args": [
+        "-g",
+        "${file}",
+        "-o",
+        "${workspaceFolder}/bin/${fileBasenameNoExtension}.out",
+        "-std=c++20"
+      ],
+      "command": "/usr/bin/clang++",
+      "group": {
+        "isDefault": true,
+        "kind": "build"
+      },
+      "label": "single file build",
+      "presentation": {
+        "clear": true,
+        "echo": false,
+        "focus": false,
+        "panel": "shared",
+        "reveal": "silent",
+        "showReuseMessage": false
+      },
+      "problemMatcher": "$gcc",
+      "type": "process"
+    },
+    {
+      "args": [],
+      "command": "${fileDirname}/${fileBasenameNoExtension}.out",
+      "dependsOn": "single file build",
+      "label": "run and pause",
+      "presentation": {
+        "clear": true,
+        "echo": false,
+        "close": true,
+        "focus": true,
+        "panel": "shared",
+        "reveal": "never",
+        "showReuseMessage": false
+      },
+      "problemMatcher": [],
+      "type": "pause-console"
+    }
+  ],
+  "version": "2.0.0"
+}

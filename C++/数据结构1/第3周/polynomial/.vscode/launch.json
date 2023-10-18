@@ -1,0 +1,23 @@
+{
+  "configurations": [
+    {
+      "MIMode": "lldb",
+      "args": [],
+      "console": "integratedTerminal",
+      "cwd": "${fileDirname}",
+      "env": {
+        "PATH": "/usr/bin:${env:PATH}"
+      },
+      "environment": [],
+      "internalConsosleOptions": "neverOpen",
+      "miDebuggerPath": "/usr/bin/lldb",
+      "name": "single file debug",
+      "preLaunchTask": "single file build",
+      "program": "${workspaceFolder}/bin/${fileBasenameNoExtension}.out",
+      "request": "launch",
+      "stopAtEntry": false,
+      "type": "lldb"
+    }
+  ],
+  "version": "0.2.0"
+}

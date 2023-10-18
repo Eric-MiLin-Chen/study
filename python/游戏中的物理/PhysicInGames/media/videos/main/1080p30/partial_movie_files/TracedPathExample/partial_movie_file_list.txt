@@ -1,0 +1,2 @@
+# This file is used internally by FFMPEG.
+file 'file:/Users/lin/code/python/游戏中的物理/PhysicInGames/media/videos/main/1080p30/partial_movie_files/TracedPathExample/2026767530_3366745750_2329261990.mp4'
