@@ -3,7 +3,7 @@
 using namespace std;
 
 // Function to initialize processes with random values
-void initializeProcesses(vector<PCB> &processes, int n)
+void InitializeProcesses(vector<PCB> &processes, int n)
 {
     srand(time(0));
     for (int i = 0; i < n; ++i)
@@ -21,7 +21,7 @@ void initializeProcesses(vector<PCB> &processes, int n)
 }
 
 // Function to display the current state of processes
-void displayProcesses(const vector<PCB> &processes)
+void DisplayProcesses(const vector<PCB> &processes)
 {
     cout << "ID\tPriority\tCPU Time\tAll Time\tState\tWaiting Time\tTurnaround Time\n";
     for (const auto &process : processes)
@@ -31,10 +31,11 @@ void displayProcesses(const vector<PCB> &processes)
              << process.state << "\t\t" << process.waitingTime << "\t\t"
              << process.turnaroundTime << endl;
     }
+    cout << endl;
 }
 
 // Priority Scheduling Algorithm
-void priorityScheduling(vector<PCB> &processes, bool display)
+void PriorityScheduling(vector<PCB> &processes, bool display)
 {
     sort(processes.begin(), processes.end(), [](const PCB &a, const PCB &b)
          {
@@ -42,168 +43,121 @@ void priorityScheduling(vector<PCB> &processes, bool display)
          });
 
     int currentTime = 0;
+    int waitingProcesses = processes.size();
 
-    while (!processes.empty())
+    for (auto &currentprocess : processes)
     {
-        auto &process = processes.front();
-        process.waitingTime = currentTime;
-        while (process.cpuTime < process.allTime)
+        while (true)
         {
-            if (display)
-                cout << "Running Process " << process.id << endl;
-            process.cpuTime++;
+            currentprocess.cpuTime++;
             currentTime++;
+
+            for (auto &process : processes)
+            {
+                if (process.state == "F")
+                    continue;
+                process.waitingTime++;
+            }
+            currentprocess.waitingTime--;
+
+            if (currentprocess.cpuTime >= currentprocess.allTime)
+            {
+                currentprocess.turnaroundTime = currentTime;
+                currentprocess.state = "F";
+                waitingProcesses--;
+            }
             if (display)
-                displayProcesses(processes);
+            {
+                cout << "Running Process " << currentprocess.id << endl;
+                DisplayProcesses(processes);
+            }
+            if (currentprocess.cpuTime >= currentprocess.allTime)
+                break;
         }
-        process.state = "F"; // Set process state to finish
-        processes.erase(remove_if(processes.begin(), processes.end(),
-                                  [](const PCB &p)
-                                  { return p.state == "F"; }),
-                        processes.end());
-        if (display)
-            displayProcesses(processes);
     }
 }
 
 // Round Robin Scheduling Algorithm
-void roundRobinScheduling(vector<PCB> &processes, int timeSlice, bool display)
+void RoundRobinScheduling(vector<PCB> &processes, bool display, int timeSlice)
 {
-    while (!processes.empty())
-    {
-        int currentTime = 0;
+    int currentTime = 0;
+    int waitingProcess = processes.size();
 
-        for (auto &process : processes)
+    while (waitingProcess)
+    {
+        for (auto &currentprocess : processes)
         {
-            process.waitingTime = currentTime;
+            if (currentprocess.state == "F")
+                continue;
+
+            currentprocess.waitingTime -= timeSlice;
+            currentprocess.cpuTime += timeSlice;
             currentTime += timeSlice;
 
-            if (display)
-                cout << "Running Process " << process.id << endl;
-            process.cpuTime += timeSlice;
-
-            if (process.cpuTime >= process.allTime)
+            for (auto &process : processes)
             {
-                process.turnaroundTime = currentTime - process.waitingTime;
-                process.state = "F"; // Set process state to finish
-                processes.erase(remove_if(processes.begin(), processes.end(),
-                                          [](const PCB &p)
-                                          { return p.state == "F"; }),
-                                processes.end());
+                if (process.state == "F")
+                    continue;
+                process.waitingTime += timeSlice;
+            }
+
+            if (currentprocess.cpuTime >= currentprocess.allTime)
+            {
+                currentprocess.turnaroundTime = currentTime;
+                currentprocess.state = "F";
+                waitingProcess--;
             }
 
             if (display)
-                displayProcesses(processes);
+            {
+                cout << "Running Process " << currentprocess.id << endl;
+                DisplayProcesses(processes);
+            }
         }
     }
 }
 
 // HRRN Scheduling Algorithm
-void hrrnScheduling(vector<PCB> &processes, bool display)
+void HRRNScheduling(vector<PCB> &processes, bool display)
 {
     int currentTime = 0;
+    int waitingProcesses = processes.size();
 
-    while (!processes.empty())
+    while (waitingProcesses)
     {
         // Calculate the response ratio for each process
         for (auto &process : processes)
         {
             double responseRatio = (currentTime - process.cpuTime + process.allTime) / static_cast<double>(process.allTime);
             process.priority = responseRatio;
+            if (process.state == "F")
+                continue;
+            process.waitingTime++;
         }
 
         // Sort processes based on response ratio (higher first)
-        sort(processes.begin(), processes.end(), [](const PCB &a, const PCB &b)
+        sort(processes.begin(), processes.begin() + waitingProcesses, [](const PCB &a, const PCB &b)
              { return a.priority > b.priority; });
 
         // Run the process with the highest response ratio
-        auto &process = processes.front();
-        if (display)
-            cout << "Running Process " << process.id << endl;
-        process.cpuTime++;
+        auto &currentprocess = processes.front();
 
-        if (process.cpuTime >= process.allTime)
-        {
-            process.turnaroundTime = currentTime - process.waitingTime;
-            process.state = "F"; // Set process state to finish
-            processes.erase(remove_if(processes.begin(), processes.end(),
-                                      [](const PCB &p)
-                                      { return p.state == "F"; }),
-                            processes.end());
-        }
-
-        for (auto &process : processes)
-        {
-            if (process.state == "W")
-                process.waitingTime++;
-        }
-
+        currentprocess.waitingTime--;
+        currentprocess.cpuTime++;
         currentTime++;
-        if (display)
-            displayProcesses(processes);
-    }
-}
 
-// Banker's Algorithm for Resource Allocation
-bool isSafeState(const vector<vector<int>> &max, const vector<vector<int>> &allocation,
-                 const vector<int> &available, vector<int> &work, vector<bool> &finish)
-{
-    int numProcesses = max.size();
-    int numResources = max[0].size();
-
-    for (int i = 0; i < numProcesses; ++i)
-    {
-        if (!finish[i])
+        if (currentprocess.cpuTime >= currentprocess.allTime)
         {
-            bool canAllocate = true;
-            for (int j = 0; j < numResources; ++j)
-            {
-                if (max[i][j] - allocation[i][j] > work[j])
-                {
-                    canAllocate = false;
-                    break;
-                }
-            }
+            currentprocess.turnaroundTime = currentTime - currentprocess.waitingTime;
+            currentprocess.state = "F"; // Set process state to finish
+            rotate(processes.begin(), processes.begin() + 1, processes.end());
+            waitingProcesses--;
+        }
 
-            if (canAllocate)
-            {
-                for (int j = 0; j < numResources; ++j)
-                {
-                    work[j] += allocation[i][j];
-                }
-                finish[i] = true;
-                return true;
-            }
+        if (display)
+        {
+            cout << "Running Process " << currentprocess.id << endl;
+            DisplayProcesses(processes);
         }
     }
-
-    return false;
 }
-
-// Banker's Algorithm Implementation
-// void bankersAlgorithm(const vector<vector<int>> &max, const vector<vector<int>> &allocation, const vector<int> &available)
-// {
-//     int numProcesses = max.size();
-//     int numResources = max[0].size();
-
-//     vector<int> work = available;
-//     vector<bool> finish(numProcesses, false);
-
-//     for (int i = 0; i < numProcesses; ++i)
-//     {
-//         if (!finish[i])
-//         {
-//             if (isSafeState(max, allocation, available, work, finish))
-//             {
-//                 cout << "Running Process " << i + 1 << endl;
-//                 finish[i] = true;
-//                 displayProcesses(processes);
-//             }
-//             else
-//             {
-//                 cout << "Unsafe state. Cannot proceed with process " << i + 1 << endl;
-//                 break;
-//             }
-//         }
-//     }
-// }

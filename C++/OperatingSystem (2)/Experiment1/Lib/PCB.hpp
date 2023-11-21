@@ -18,11 +18,9 @@ struct PCB
     int turnaroundTime; // Added for performance metrics
 };
 
-void initializeProcesses(std::vector<PCB> &processes, int n);
-void displayProcesses(const std::vector<PCB> &processes);
-void priorityScheduling(std::vector<PCB> &processes, bool display = false);
-void roundRobinScheduling(std::vector<PCB> &processes, int timeSlice = 1, bool display = false);
-void hrrnScheduling(std::vector<PCB> &processes, bool display = false);
-bool isSafeState(const std::vector<std::vector<int>> &max, const std::vector<std::vector<int>> &allocation,
-                 const std::vector<int> &available, std::vector<int> &work, std::vector<bool> &finish);
+void InitializeProcesses(std::vector<PCB> &processes, int n);
+void DisplayProcesses(const std::vector<PCB> &processes);
+void PriorityScheduling(std::vector<PCB> &processes, bool display = false);
+void RoundRobinScheduling(std::vector<PCB> &processes, bool display = false, int timeSlice = 1);
+void HRRNScheduling(std::vector<PCB> &processes, bool display = false);
 #endif
