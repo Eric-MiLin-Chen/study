@@ -14,6 +14,8 @@ void initializeProcesses(vector<PCB> &processes, int n)
         process.cpuTime = 0;
         process.allTime = 3 + rand() % 5; // Random required time slices
         process.state = "W";              // Initial state is waiting
+        process.waitingTime = 0;
+        process.turnaroundTime = 0;
         processes.push_back(process);
     }
 }
@@ -21,12 +23,13 @@ void initializeProcesses(vector<PCB> &processes, int n)
 // Function to display the current state of processes
 void displayProcesses(const vector<PCB> &processes)
 {
-    cout << "ID\tPriority\tCPU Time\tAll Time\tState\n";
+    cout << "ID\tPriority\tCPU Time\tAll Time\tState\tWaiting Time\tTurnaround Time\n";
     for (const auto &process : processes)
     {
         cout << process.id << "\t" << process.priority << "\t\t"
              << process.cpuTime << "\t\t" << process.allTime << "\t\t"
-             << process.state << endl;
+             << process.state << "\t\t" << process.waitingTime << "\t\t"
+             << process.turnaroundTime << endl;
     }
 }
 
@@ -38,14 +41,18 @@ void priorityScheduling(vector<PCB> &processes, bool display)
              return a.priority > b.priority; // Sort by priority (higher first)
          });
 
+    int currentTime = 0;
+
     while (!processes.empty())
     {
         auto &process = processes.front();
+        process.waitingTime = currentTime;
         while (process.cpuTime < process.allTime)
         {
             if (display)
                 cout << "Running Process " << process.id << endl;
             process.cpuTime++;
+            currentTime++;
             if (display)
                 displayProcesses(processes);
         }
@@ -64,14 +71,20 @@ void roundRobinScheduling(vector<PCB> &processes, int timeSlice, bool display)
 {
     while (!processes.empty())
     {
+        int currentTime = 0;
+
         for (auto &process : processes)
         {
+            process.waitingTime = currentTime;
+            currentTime += timeSlice;
+
             if (display)
                 cout << "Running Process " << process.id << endl;
             process.cpuTime += timeSlice;
 
             if (process.cpuTime >= process.allTime)
             {
+                process.turnaroundTime = currentTime - process.waitingTime;
                 process.state = "F"; // Set process state to finish
                 processes.erase(remove_if(processes.begin(), processes.end(),
                                           [](const PCB &p)
@@ -104,18 +117,25 @@ void hrrnScheduling(vector<PCB> &processes, bool display)
              { return a.priority > b.priority; });
 
         // Run the process with the highest response ratio
-        auto &currentProcess = processes.front();
+        auto &process = processes.front();
         if (display)
-            cout << "Running Process " << currentProcess.id << endl;
-        currentProcess.cpuTime++;
+            cout << "Running Process " << process.id << endl;
+        process.cpuTime++;
 
-        if (currentProcess.cpuTime >= currentProcess.allTime)
+        if (process.cpuTime >= process.allTime)
         {
-            currentProcess.state = "F"; // Set process state to finish
+            process.turnaroundTime = currentTime - process.waitingTime;
+            process.state = "F"; // Set process state to finish
             processes.erase(remove_if(processes.begin(), processes.end(),
                                       [](const PCB &p)
                                       { return p.state == "F"; }),
                             processes.end());
+        }
+
+        for (auto &process : processes)
+        {
+            if (process.state == "W")
+                process.waitingTime++;
         }
 
         currentTime++;
