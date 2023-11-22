@@ -10,12 +10,13 @@ void InitializeProcesses(vector<PCB> &processes, int n)
     {
         PCB process;
         process.id = i + 1;
-        process.priority = rand() % 10; // Random priority for simplicity
+        process.priority = rand() % 10; // 为简单起见，随机生成优先级
         process.cpuTime = 0;
-        process.allTime = 3 + rand() % 5; // Random required time slices
-        process.state = "W";              // Initial state is waiting
+        process.allTime = 3 + rand() % 5; // 随机生成所需的时间片
+        process.state = "W";              // 初始状态为等待
         process.waitingTime = 0;
         process.turnaroundTime = 0;
+        process.submissionTime = rand() % 15;
         processes.push_back(process);
     }
 }
@@ -39,7 +40,7 @@ void PriorityScheduling(vector<PCB> &processes, bool display)
 {
     sort(processes.begin(), processes.end(), [](const PCB &a, const PCB &b)
          {
-             return a.priority > b.priority; // Sort by priority (higher first)
+             return a.priority > b.priority; // 按优先级排序（高优先级优先）
          });
 
     int currentTime = 0;
@@ -125,7 +126,7 @@ void HRRNScheduling(vector<PCB> &processes, bool display)
 
     while (waitingProcesses)
     {
-        // Calculate the response ratio for each process
+        // 计算每个进程的响应比
         for (auto &process : processes)
         {
             double responseRatio = (currentTime - process.cpuTime + process.allTime) / static_cast<double>(process.allTime);
@@ -135,11 +136,11 @@ void HRRNScheduling(vector<PCB> &processes, bool display)
             process.waitingTime++;
         }
 
-        // Sort processes based on response ratio (higher first)
+        // 根据响应比排序进程（高响应比优先）
         sort(processes.begin(), processes.begin() + waitingProcesses, [](const PCB &a, const PCB &b)
              { return a.priority > b.priority; });
 
-        // Run the process with the highest response ratio
+        // 运行响应比最高的进程
         auto &currentprocess = processes.front();
 
         currentprocess.waitingTime--;
@@ -149,7 +150,7 @@ void HRRNScheduling(vector<PCB> &processes, bool display)
         if (currentprocess.cpuTime >= currentprocess.allTime)
         {
             currentprocess.turnaroundTime = currentTime - currentprocess.waitingTime;
-            currentprocess.state = "F"; // Set process state to finish
+            currentprocess.state = "F"; // 将进程状态设置为完成
             rotate(processes.begin(), processes.begin() + 1, processes.end());
             waitingProcesses--;
         }

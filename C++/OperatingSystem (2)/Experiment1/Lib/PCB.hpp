@@ -16,6 +16,7 @@ struct PCB
     std::string state;
     int waitingTime;    // Added for performance metrics
     int turnaroundTime; // Added for performance metrics
+    int submissionTime;
 };
 
 void InitializeProcesses(std::vector<PCB> &processes, int n);

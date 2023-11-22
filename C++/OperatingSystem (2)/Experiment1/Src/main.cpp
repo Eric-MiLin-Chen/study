@@ -2,11 +2,13 @@
 
 using namespace std;
 
+// 函数声明，用于比较不同调度算法的性能
 void PerformanceCompare(vector<PCB> &processes, bool display = false);
 
+// 比较不同调度算法的性能
 void PerformanceCompare(vector<PCB> &processes, bool display)
 {
-    // Metrics for priority scheduling
+    // 优先级调度的性能指标
     int totalTurnaroundPriority = 0;
     int totalWaitingPriority = 0;
     int n = processes.size();
@@ -15,17 +17,18 @@ void PerformanceCompare(vector<PCB> &processes, bool display)
         cout << "Priority Scheduling:\n";
     PriorityScheduling(processes, display);
 
+    // 计算优先级调度的平均周转时间和平均等待时间
     for (const auto &process : processes)
     {
         totalTurnaroundPriority += process.turnaroundTime;
         totalWaitingPriority += process.waitingTime;
     }
 
-    // Metrics for round-robin scheduling
+    // 循环轮转调度的性能指标
     int totalTurnaroundRoundRobin = 0;
     int totalWaitingRoundRobin = 0;
 
-    // Reset processes for round-robin scheduling
+    // 为循环轮转调度重置进程
     for (auto &process : processes)
     {
         process.cpuTime = 0;
@@ -38,17 +41,18 @@ void PerformanceCompare(vector<PCB> &processes, bool display)
         cout << "\nRound Robin Scheduling:\n";
     RoundRobinScheduling(processes, display);
 
+    // 计算循环轮转调度的平均周转时间和平均等待时间
     for (const auto &process : processes)
     {
         totalTurnaroundRoundRobin += process.turnaroundTime;
         totalWaitingRoundRobin += process.waitingTime;
     }
 
-    // Metrics for HRRN scheduling
+    // HRRN调度的性能指标
     int totalTurnaroundHRRN = 0;
     int totalWaitingHRRN = 0;
 
-    // Reset processes for HRRN scheduling
+    // 为HRRN调度重置进程
     for (auto &process : processes)
     {
         process.cpuTime = 0;
@@ -61,13 +65,14 @@ void PerformanceCompare(vector<PCB> &processes, bool display)
         cout << "\nHRRN Scheduling:\n";
     HRRNScheduling(processes, display);
 
+    // 计算HRRN调度的平均周转时间和平均等待时间
     for (const auto &process : processes)
     {
         totalTurnaroundHRRN += process.turnaroundTime;
         totalWaitingHRRN += process.waitingTime;
     }
 
-    // Display performance metrics
+    // 显示性能指标
     cout << "\nPerformance Metrics:\n";
     cout << "Priority Scheduling - Average Turnaround Time: " << static_cast<double>(totalTurnaroundPriority) / n << endl;
     cout << "Priority Scheduling - Average Waiting Time: " << static_cast<double>(totalWaitingPriority) / n << endl;
@@ -88,10 +93,12 @@ int main()
     vector<PCB> processes;
     InitializeProcesses(processes, n);
 
+    // 输入要使用的调度算法
     cout << "Enter the scheduling algorithm (PF/RR/HRRN/(0 to compare all)): ";
     string algorithm;
     cin >> algorithm;
 
+    // 根据用户输入选择调度算法
     if (algorithm == "PF" || algorithm == "pf")
         PriorityScheduling(processes, true);
     else if (algorithm == "RR" || algorithm == "rr")
