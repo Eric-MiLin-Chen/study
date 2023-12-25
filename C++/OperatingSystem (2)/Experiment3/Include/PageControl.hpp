@@ -3,30 +3,59 @@
 
 #include <iostream>
 #include <vector>
-#include <algorithm>
+#include <list>
+#include <unordered_map>
+#include <queue>
+#include <unordered_set>
+#include <cmath>
 #include <ctime>
-const int RESOURCE_TYPES = 5;
-const int PROCESS_NUMS = 5;
+#include <iomanip> // 用于格式化输出
 
-// Process Control Block (PCB) structure
-struct PCB
+// 生成模拟的指令地址流
+std::vector<int> generateInstructionStream(int numInstructions, int numPages);
+
+// LRU 页面淘汰算法
+class LRU
 {
-    int id;
-    int priority;
-    int cpuTime;
-    int allTime;
-    std::string state;
-    int waitingTime;    // Added for performance metrics
-    int turnaroundTime; // Added for performance metrics
-    int submissionTime;
-    int allocation[RESOURCE_TYPES];
-    int claim[RESOURCE_TYPES];
+private:
+    std::list<int> pages;                                      // 存储页面的列表
+    std::unordered_map<int, std::list<int>::iterator> pageMap; // 映射页面和其在列表中的位置
+    int capacity;                                              // 内存中可以存储的页数
+
+public:
+    LRU(int capacity) : capacity(capacity) {}
+    void accessPage(int pageId);
+    bool isPageInMemory(int pageId) const;
 };
 
-void InitializeProcesses(std::vector<PCB> &processes, int n);
-void DisplayCPUUsage(const std::vector<PCB> &processes);
-void DisplayResourceUsage(const std::vector<PCB> &processes);
-void PriorityScheduling(std::vector<PCB> &processes, bool display = false);
-void RoundRobinScheduling(std::vector<PCB> &processes, bool display = false, int timeSlice = 1);
-void HRRNScheduling(std::vector<PCB> &processes, bool display = false);
+// FIFO 页面淘汰算法
+class FIFO
+{
+private:
+    std::queue<int> pageQueue;
+    std::unordered_set<int> pageSet;
+    int capacity;
+
+public:
+    FIFO(int capacity) : capacity(capacity) {}
+    void accessPage(int pageId);
+    bool isPageInMemory(int pageId) const;
+};
+
+// OPT 页面淘汰算法
+class OPT
+{
+private:
+    std::unordered_set<int> pages;
+    std::vector<int> instructionStream;
+    int capacity;
+
+public:
+    OPT(int capacity, const std::vector<int> &stream) : capacity(capacity), instructionStream(stream) {}
+    void accessPage(int pageId, int currentIndex);
+    void replacePage(int currentIndex);
+    int findNextIndex(int page, int currentIndex);
+    bool isPageInMemory(int pageId) const;
+};
+
 #endif
