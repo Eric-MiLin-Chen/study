@@ -17,12 +17,29 @@ void InitializeProcesses(vector<PCB> &processes, int n)
         process.waitingTime = 0;
         process.turnaroundTime = 0;
         process.submissionTime = rand() % 15;
+        printf("CLAIM OF PROCESS %d IS:", i + 1);
+        for (int j = 0; j < RESOURCE_TYPES; j++)
+            cin >> process.claim[i];
         processes.push_back(process);
     }
 }
 
 // Function to display the current state of processes
 void DisplayCPUUsage(const vector<PCB> &processes)
+{
+    cout << "ID\tPriority\tCPU Time\tAll Time\tState\tWaiting Time\tTurnaround Time\n";
+    for (const auto &process : processes)
+    {
+        cout << process.id << "\t" << process.priority << "\t\t"
+             << process.cpuTime << "\t\t" << process.allTime << "\t\t"
+             << process.state << "\t\t" << process.waitingTime << "\t\t"
+             << process.turnaroundTime << endl;
+    }
+    cout << endl;
+}
+
+// Function to display the current state of processes
+void DisplayResourceUsage(const vector<PCB> &processes)
 {
     cout << "ID\tPriority\tCPU Time\tAll Time\tState\tWaiting Time\tTurnaround Time\n";
     for (const auto &process : processes)

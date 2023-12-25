@@ -20,7 +20,7 @@ struct PCB
 };
 
 void InitializeProcesses(std::vector<PCB> &processes, int n);
-void DisplayProcesses(const std::vector<PCB> &processes);
+void DisplayCPUUsage(const std::vector<PCB> &processes);
 void PriorityScheduling(std::vector<PCB> &processes, bool display = false);
 void RoundRobinScheduling(std::vector<PCB> &processes, bool display = false, int timeSlice = 1);
 void HRRNScheduling(std::vector<PCB> &processes, bool display = false);
